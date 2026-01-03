@@ -1,0 +1,5 @@
+[project]
+name = "PySide QtQuick Project"
+
+[tool.pyside6-project]
+files = ["backend/Reactor.py", "icons/app_icon.svg", "icons/close_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg", "icons/folder_closed.svg", "icons/folder_open.svg", "icons/generic_file.svg", "icons/globe.svg", "icons/info_sign.svg", "icons/light_bulb.svg", "icons/minimize_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg", "icons/qt_logo.svg", "icons/read.svg", "icons/remove_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg", "icons/resize.svg", "icons/select_window_2_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg", "icons/square_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg", "main.py", "qml/Colors/Colors.qml", "qml/Colors/qmldir", "qml/LabeledSwitch.qml", "qml/TitleBar.qml", "qml/WindowDragHandler.qml", "qml/main.qml"]
