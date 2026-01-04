@@ -3,18 +3,49 @@ import QtQuick.Controls
 import QtQuick.Window
 import "." as Local
 
-
 Item {
     id: root
     required property ApplicationWindow window
+    required property var serialManager
     height: 32
     anchors.left: parent.left
     anchors.right: parent.right
+    
+    // TEMPORARY PLEASE REMOVE 
+    Component.onCompleted: {
+        console.log("serialManager =", serialManager)
+    }
+
+
     Rectangle {
         anchors.fill: parent
         color: Local.Colors.surface1
         WindowDragHandler {
             dragWindow: root.window
+        }
+    }
+    
+    Row {
+        anchors.left: parent.left
+        anchors.verticalCenter: parent.verticalCenter
+        spacing: 6
+
+        Text {
+            text: serialManager ? "SM OK" : "SM UNDEFINED"
+        }
+
+
+        CustomButton {
+            labeledText: true
+            label: serialManager.isConnected ? "Disconnect" : "Connect"
+
+            onClicked: {
+                if (serialManager.isConnected) {
+                    serialManager.disconnect()
+                } else {
+                    myConnectionDialog.open() 
+                }
+            }
         }
     }
 
@@ -77,5 +108,12 @@ Item {
 
             onClicked: root.window.close()
         }
+    }
+    
+    SerialConnectionDialog {
+        id: myConnectionDialog 
+        parent: Overlay.overlay
+        anchors.centerIn: parent
+        testSerialManager: serialManager
     }
 }

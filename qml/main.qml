@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import "." as Local
-import QtCharts 
 
 pragma ComponentBehavior: Bound
 
@@ -17,6 +16,8 @@ ApplicationWindow {
     color: Local.Colors.background
     flags: Qt.Window | Qt.FramelessWindowHint
 
+    property var backendSerialManager: serialManager
+
     function sendCommand() {
         if (inputField.text.length === 0)
             return
@@ -24,27 +25,46 @@ ApplicationWindow {
         inputField.clear()
     }
 
+    Connections {
+        target: serialManager
+        function onConnected() {
+            console.log("✓ Arduino connected!")
+        }
+        function onDisconnected() {
+            console.log("✗ Arduino disconnected")
+        }
+        function onDataReceived(data) {
+            console.log(data)
+            serialmonitor.append(data)
+        }
+        function onConnectionError(error) {
+            console.error("Error", error)
+        }
+    }
+
 
     ColumnLayout {
         anchors.fill: parent
+        
         TitleBar {
             id: titleBar
+            serialManager: backendSerialManager
             window: root
             anchors.top: parent.top
             anchors.left: parent.left
             anchors.right: parent.right
             height: 32
-            // background: Local.Colors.background
         }
 
         RowLayout {
             spacing: 8
+            
+            // Left Panel - Serial Monitor
             Rectangle {
-                Layout.preferredWidth: 300
+                Layout.preferredWidth: 400
                 Layout.fillHeight: true
                 color: "#2c2c2c"
 
-                // Quick Controls
                 ColumnLayout {
                     anchors.fill: parent
                     anchors.margins: 8
@@ -61,7 +81,6 @@ ApplicationWindow {
                     LabeledSwitch { text: "Enable CO2" }
                     LabeledSwitch { text: "Enable Power" }
 
-
                     Text {
                         text: qsTr("Serial Monitor")
                         font.pixelSize: 16
@@ -72,8 +91,8 @@ ApplicationWindow {
                     Rectangle {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        color: "#1e1e1e"  // Darker than parent for contrast
-                        border.color: "#404040"
+                        color: Local.Colors.background
+                        border.color: 'grey'
                         border.width: 1
                         radius: 4
 
@@ -82,13 +101,18 @@ ApplicationWindow {
                             anchors.margins: 4
 
                             TextArea {
+                                id: serialmonitor
                                 readOnly: true
-                                text: backend.logText
-                                color: "#00ff00"  // Classic green terminal text
+                                color: Local.Colors.text
                                 font.family: "Courier New"
                                 font.pixelSize: 12
-                                wrapMode: TextArea.Wrap
-                                background: Item {}  // Transparent, use Rectangle's color
+                                wrapMode: TextArea.WrapAnywhere
+                                background: Item{}
+
+                                function append(text) {
+                                    serialmonitor.text += text + "\n"
+                                    serialmonitor.cursorPosition = serialmonitor.length
+                                }
                             }
                         }
                     }
@@ -96,14 +120,14 @@ ApplicationWindow {
                     RowLayout {
                         Layout.fillWidth: true
                         spacing: 6
-                        id: rowroot
 
                         Rectangle {
                             Layout.fillWidth: true
-                            color:Local.Colors.inactive
+                            color: Local.Colors.inactive
                             border.color: "white"
                             radius: 4
                             Layout.preferredHeight: 25
+                            
                             TextField {
                                 id: inputField
                                 anchors.left: parent.left
@@ -111,14 +135,13 @@ ApplicationWindow {
                                 anchors.verticalCenter: parent.verticalCenter
 
                                 placeholderText: "Type Command..."
-                                placeholderTextColor:Local.Colors.text
+                                placeholderTextColor: Local.Colors.text
                                 color: Local.Colors.text
 
                                 background: Item {}
                                 onAccepted: sendCommand()
                             }
                         }
-
 
                         Button {
                             id: serial_send
@@ -127,7 +150,6 @@ ApplicationWindow {
 
                             background: Rectangle {
                                 border.color: "white"
-                                Layout.preferredHeight: 20
                                 anchors.fill: parent
                                 radius: 6
                                 color: serial_send.hovered ? Local.Colors.background : "#2c2c2c"
@@ -144,25 +166,60 @@ ApplicationWindow {
                 }
             }
 
+            // Middle Panel - 4 CHARTS IN 2x2 GRID
             Rectangle {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                Layout.preferredHeight: 300
                 color: "#1e1e1e"
-                border.color: "red"
-                border.width: 2
-
-                ChartView {
-                    anchors.fill: parent  // ← ADD THIS!        
-                    antialiasing: true
+                
+                GridLayout {
+                    anchors.fill: parent
+                    anchors.margins: 8
+                    columns: 2
+                    rows: 2
+                    columnSpacing: 8
+                    rowSpacing: 8
+                    
+                    // Top-Left: Pre-Heater Temperature
+                    ChartComponent {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        title: "Pre-Heater Temperature"
+                        accentColor: "#ff6b6b"
+                        showControls: false
+                        showStatusBar: false
+                    }
+                    
+                    // Top-Right: Power Percent
+                    ChartComponent {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        title: "Power Percent"
+                        accentColor: "#4ecdc4"
+                        showControls: false
+                        showStatusBar: false
+                    }
+                    
+                    // Bottom-Left: Reactor Temperature
+                    ChartComponent {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        title: "Reactor Temperature"
+                        accentColor: "#ffbe0b"
+                        showControls: false
+                        showStatusBar: false
+                    }
+                    
+                    // Bottom-Right: Average Temperature
+                    ChartComponent {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        title: "Average Temperature"
+                        accentColor: "#fb5607"
+                        showControls: false
+                        showStatusBar: false
+                    }
                 }
-
-            }
-
-            Rectangle {
-                Layout.preferredWidth: 250
-                Layout.fillHeight: true
-                color: "#2c2c2c"
             }
         }
     }

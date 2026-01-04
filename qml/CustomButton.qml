@@ -1,0 +1,44 @@
+import QtQuick
+import QtQuick.Controls
+import "." as Local
+
+Item {
+    id: buttonRoot
+
+    property string label: "Button Text"
+    property bool labeledText: true
+    property int padding: 3
+    property bool outline: true
+    property int outlineWidth: 1
+
+    signal clicked()
+
+    implicitWidth: textItem.implicitWidth + padding * 2
+    implicitHeight: textItem.implicitHeight + padding * 2
+
+    Rectangle {
+        anchors.fill: parent
+        radius: 6
+
+        color: mouse.containsMouse ? Local.Colors.background : Local.Colors.surface1
+
+        border.width: outline ? outlineWidth : 0
+        border.color: outline ? Local.Colors.text : "transparent"
+
+        Text {
+            id: textItem
+            text: buttonRoot.label
+            visible: buttonRoot.labeledText
+            anchors.centerIn: parent
+            color: mouse.containsMouse ? Local.Colors.iconIndicator : Local.Colors.text
+        }
+
+        MouseArea {
+            id: mouse
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: buttonRoot.clicked()
+        }
+    }
+}
