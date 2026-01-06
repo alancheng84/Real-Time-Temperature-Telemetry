@@ -7,7 +7,7 @@ class SerialManager(QObject):
     connected = Signal()
     disconnected = Signal()
     connectionChanged = Signal()
-    dataReceived = Signal(str)
+    dataReceived = Signal(str, str)
     connectionError = Signal(str)
 
     def __init__(self):
@@ -94,7 +94,7 @@ class SerialManager(QObject):
                 f.write(f"{timestamp},{line}\n")
 
             # Optional: still emit to QML / UI
-            self.dataReceived.emit(line)
+            self.dataReceived.emit(timestamp, line)
 
     def _on_error(self, error):
         if error == QSerialPort.NoError:

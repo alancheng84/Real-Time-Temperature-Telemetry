@@ -12,3 +12,6 @@ env/
 
 # qtcreator
 .qtcreator/
+
+serial_log.csv
+serial_log.txt

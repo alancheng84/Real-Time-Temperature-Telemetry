@@ -3,7 +3,7 @@ import QtQuick.Layouts
 import QtQuick.Controls
 import "." as Local
 
-pragma ComponentBehavior: Bound
+// pragma ComponentBehavior: Bound
 
 ApplicationWindow {
     id: root
@@ -33,9 +33,9 @@ ApplicationWindow {
         function onDisconnected() {
             console.log("✗ Arduino disconnected")
         }
-        function onDataReceived(data) {
-            console.log(data)
-            serialmonitor.append(data)
+        function onDataReceived(dtime, ddata) {
+            console.log(ddata)
+            serialmonitor.append({stime : dtime, sdata : ddata})
         }
         function onConnectionError(error) {
             console.error("Error", error)
@@ -96,23 +96,15 @@ ApplicationWindow {
                         border.width: 1
                         radius: 4
 
-                        ScrollView {
+                        ListModel {
+                            id: serialmonitor
+                        }
+                        ListView {
                             anchors.fill: parent
-                            anchors.margins: 4
-
-                            TextArea {
-                                id: serialmonitor
-                                readOnly: true
+                            model: serialmonitor
+                            delegate: Text { 
+                                text: stime + " | " + sdata
                                 color: Local.Colors.text
-                                font.family: "Courier New"
-                                font.pixelSize: 12
-                                wrapMode: TextArea.WrapAnywhere
-                                background: Item{}
-
-                                function append(text) {
-                                    serialmonitor.text += text + "\n"
-                                    serialmonitor.cursorPosition = serialmonitor.length
-                                }
                             }
                         }
                     }
