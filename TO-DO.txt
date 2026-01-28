@@ -1,0 +1,4 @@
+* turn switches -> enable/disable buttons
+* cleaner display for qtgraphs
+* code/UI formatting
+* x-axis (time)?

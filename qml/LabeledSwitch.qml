@@ -8,7 +8,7 @@ Item {
     property string text: "Label"
     property int size: 16
     property bool checked: false
-
+    property var customfn
     implicitHeight: size
     implicitWidth: column.implicitWidth
 

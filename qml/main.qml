@@ -21,7 +21,7 @@ ApplicationWindow {
     function sendCommand() {
         if (inputField.text.length === 0)
             return
-        // backEnd.append("> " + inputField.text)
+        serialManager.sendData(inputField.text)
         inputField.clear()
     }
 
@@ -39,6 +39,13 @@ ApplicationWindow {
         }
         function onConnectionError(error) {
             console.error("Error", error)
+        }
+        function onTelemetryUpdated() {
+            var data = serialManager.getTelemetrySeries()
+            topleftPanel.updateSeries(data.ph1, data.ph2)
+            toprightPanel.updateSeries(data.pwr, [])
+            bottomleftPanel.updateSeries(data.rs, data.rg)
+            bottomrightPanel.updateSeries(data.avg, [])
         }
     }
 
@@ -76,10 +83,56 @@ ApplicationWindow {
                         color: Local.Colors.text
                     }
 
-                    LabeledSwitch { text: "Enable H2" }
-                    LabeledSwitch { text: "Enable Ar" }
-                    LabeledSwitch { text: "Enable CO2" }
-                    LabeledSwitch { text: "Enable Power" }
+                    GridLayout {
+                        Layout.fillWidth: true
+                        columns: 2
+                        rows: 3
+                        columnSpacing: 8
+                        rowSpacing: 8
+                        Layout.preferredHeight: 400
+                        CustomButton {
+                            Layout.fillWidth: true
+                            Layout.preferredWidth: 100
+                            Layout.fillHeight: true
+                            label: "H2 ON"
+                            labeledText: true
+                        }
+                        CustomButton {
+                            Layout.fillWidth: true
+                            Layout.preferredWidth: 100
+                            Layout.fillHeight: true
+                            label: "H2 OFF"
+                            labeledText: true
+                        }
+                        CustomButton {
+                            Layout.fillWidth: true
+                            Layout.preferredWidth: 100
+                            Layout.fillHeight: true
+                            label: "AR ON"
+                            labeledText: true
+                        }
+                        CustomButton {
+                            Layout.fillWidth: true
+                            Layout.preferredWidth: 100
+                            Layout.fillHeight: true
+                            label: "AR OFF"
+                            labeledText: true
+                        }
+                        CustomButton {
+                            Layout.fillWidth: true
+                            Layout.preferredWidth: 100
+                            Layout.fillHeight: true
+                            label: "CO2 ON"
+                            labeledText: true
+                        }
+                        CustomButton {
+                            Layout.fillWidth: true
+                            Layout.preferredWidth: 100
+                            Layout.fillHeight: true
+                            label: "CO2 OFF"
+                            labeledText: true
+                        }
+                    }
 
                     Text {
                         text: qsTr("Serial Monitor")
@@ -91,6 +144,7 @@ ApplicationWindow {
                     Rectangle {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
+                        Layout.preferredHeight: 600
                         color: Local.Colors.background
                         border.color: 'grey'
                         border.width: 1
@@ -142,8 +196,8 @@ ApplicationWindow {
 
                             background: Rectangle {
                                 border.color: "white"
-                                anchors.fill: parent
-                                radius: 6
+                                // anchors.fill: parent
+                                // radius: 6
                                 color: serial_send.hovered ? Local.Colors.background : "#2c2c2c"
                             }
 
@@ -173,43 +227,35 @@ ApplicationWindow {
                     rowSpacing: 8
                     
                     // Top-Left: Pre-Heater Temperature
-                    ChartComponent {
+                    GraphPanel {
+                        id: topleftPanel
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        title: "Pre-Heater Temperature"
-                        accentColor: "#ff6b6b"
-                        showControls: false
-                        showStatusBar: false
+                        title: "top left"
                     }
                     
                     // Top-Right: Power Percent
-                    ChartComponent {
+                    GraphPanel {
+                        id: toprightPanel
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        title: "Power Percent"
-                        accentColor: "#4ecdc4"
-                        showControls: false
-                        showStatusBar: false
+                        title: "top right"
                     }
                     
                     // Bottom-Left: Reactor Temperature
-                    ChartComponent {
+                    GraphPanel {
+                        id: bottomleftPanel
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        title: "Reactor Temperature"
-                        accentColor: "#ffbe0b"
-                        showControls: false
-                        showStatusBar: false
+                        title: "bottom left"
                     }
                     
                     // Bottom-Right: Average Temperature
-                    ChartComponent {
+                    GraphPanel {
+                        id: bottomrightPanel
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        title: "Average Temperature"
-                        accentColor: "#fb5607"
-                        showControls: false
-                        showStatusBar: false
+                        title: "bottom right"
                     }
                 }
             }

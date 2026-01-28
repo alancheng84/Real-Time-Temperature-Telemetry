@@ -11,15 +11,15 @@ Item {
     anchors.left: parent.left
     anchors.right: parent.right
     
-    // TEMPORARY PLEASE REMOVE 
-    Component.onCompleted: {
-        console.log("serialManager =", serialManager)
-    }
+    // // TEMPORARY PLEASE REMOVE 
+    // Component.onCompleted: {
+    //     console.log("serialManager =", serialManager)
+    // }
 
 
     Rectangle {
         anchors.fill: parent
-        color: Local.Colors.surface1
+        color: Local.Colors.header
         WindowDragHandler {
             dragWindow: root.window
         }
@@ -28,7 +28,6 @@ Item {
     Row {
         anchors.left: parent.left
         anchors.verticalCenter: parent.verticalCenter
-        spacing: 6
 
         Text {
             text: serialManager ? "SM OK" : "SM UNDEFINED"
@@ -37,6 +36,7 @@ Item {
 
         CustomButton {
             labeledText: true
+            radius: 6
             label: serialManager.isConnected ? "Disconnect" : "Connect"
 
             onClicked: {
@@ -52,8 +52,7 @@ Item {
     Row {
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
-        spacing: 6
-
+        
         Button {
             id: minimize
             width: 24

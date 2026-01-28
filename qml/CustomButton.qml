@@ -10,6 +10,7 @@ Item {
     property int padding: 3
     property bool outline: true
     property int outlineWidth: 1
+    property int radius: 0
 
     signal clicked()
 
@@ -18,9 +19,9 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        radius: 6
+        radius: buttonRoot.radius
 
-        color: mouse.containsMouse ? Local.Colors.background : Local.Colors.surface1
+        color: mouse.containsMouse ? Local.Colors.background : Local.Colors.panel
 
         border.width: outline ? outlineWidth : 0
         border.color: outline ? Local.Colors.text : "transparent"
