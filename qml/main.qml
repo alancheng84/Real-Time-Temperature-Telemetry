@@ -5,6 +5,8 @@ import "." as Local
 
 // pragma ComponentBehavior: Bound
 
+
+
 ApplicationWindow {
     id: root
     visible: true
@@ -14,10 +16,18 @@ ApplicationWindow {
     minimumHeight: 100
     title: "Qt Quick Terminal"
     color: Local.Colors.background
-    flags: Qt.Window | Qt.FramelessWindowHint
+    flags: Qt.Window
 
     property var backendSerialManager: serialManager
+    property real currentAlpha: 1.0/2
 
+    SerialConnectionDialog {
+        id: myConnectionDialog 
+        parent: Overlay.overlay
+        anchors.centerIn: parent
+        testSerialManager: serialManager
+    }
+        
     function sendCommand() {
         if (inputField.text.length === 0)
             return
@@ -42,10 +52,8 @@ ApplicationWindow {
         }
         function onTelemetryUpdated() {
             var data = serialManager.getTelemetrySeries()
-            topleftPanel.updateSeries(data.ph1, data.ph2)
-            toprightPanel.updateSeries(data.pwr, [])
-            bottomleftPanel.updateSeries(data.rs, data.rg)
-            bottomrightPanel.updateSeries(data.avg, [])
+            topleftPanel.updateSeries(data.adc, [])
+            toprightPanel.updateSeries(data.temp_raw, data.temp_ema)
         }
     }
 
@@ -53,91 +61,132 @@ ApplicationWindow {
     ColumnLayout {
         anchors.fill: parent
         
-        TitleBar {
-            id: titleBar
-            serialManager: backendSerialManager
-            window: root
-            anchors.top: parent.top
-            anchors.left: parent.left
-            anchors.right: parent.right
-            height: 32
-        }
+        // TitleBar {
+        //     id: titleBar
+        //     serialManager: backendSerialManager
+        //     window: root
+        //     Layout.alignment: Qt.AlignTop | Qt.AlignLeft | Qt.AlignRight
+        //     height: 32
+        // }
 
         RowLayout {
             spacing: 8
             
-            // Left Panel - Serial Monitor
+            // Left Panel - Management
             Rectangle {
                 Layout.preferredWidth: 400
                 Layout.fillHeight: true
-                color: "#2c2c2c"
+                color: Local.Colors.panel
+                border.width: 1
 
                 ColumnLayout {
                     anchors.fill: parent
                     anchors.margins: 8
                     spacing: 8
 
+                    RowLayout {
+                        Layout.preferredHeight: 28
+                        Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
+                        spacing: 10
+                        Rectangle {
+                            Layout.preferredWidth: 12
+                            Layout.preferredHeight: 12
+                            color: serialManager.isConnected ? "#3FB950" : "#E5533D"
+                            radius: width/2
+                            Layout.alignment: Qt.AlignVCenter
+                        }
+
+                        Text {
+                            Layout.alignment: Qt.AlignVCenter
+                            verticalAlignment: Text.AlignVCenter
+                            color: Local.Colors.text_secondary
+                            text: serialManager.isConnected ? qsTr("Connected") : qsTr("Disconnected")
+                            font.family: "Inter"
+                            font.pixelSize: 12
+                            font.weight: Font.Medium
+                        }
+
+                        CustomButton {
+                            Layout.preferredHeight: 20
+                            Layout.alignment: Qt.AlignRight
+                            Layout.preferredWidth: 50
+                            labeledText: true
+                            label: serialManager.isConnected ? "Disconnect" : "Connect"
+                            outline: true
+                            idleColor: Local.Colors.panel
+                            radius: 6 
+
+                            onClicked: {
+                                if (serialManager.isConnected) {
+                                    serialManager.disconnect()
+                                } else {
+                                    myConnectionDialog.open() 
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Quick Buttons
                     Text {
-                        text: qsTr("Quick Controls:")
-                        font.pixelSize: 16
-                        color: Local.Colors.text
+                        text: qsTr("Quick Controls: (choose n where alpha = 1/n)")
+                        font.family: "Inter"
+                        font.pixelSize: 13
+                        font.weight: Font.DemiBold
+                        font.capitalization: Font.AllUppercase
+                        font.letterSpacing: 0.8
+                        color: Local.Colors.text_secondary
                     }
 
                     GridLayout {
                         Layout.fillWidth: true
-                        columns: 2
-                        rows: 3
+                        columns: 3
+                        rows: 1
                         columnSpacing: 8
                         rowSpacing: 8
-                        Layout.preferredHeight: 400
+                        Layout.preferredHeight: 60
                         CustomButton {
                             Layout.fillWidth: true
-                            Layout.preferredWidth: 100
+                            Layout.preferredWidth: 80
                             Layout.fillHeight: true
-                            label: "H2 ON"
+                            label: "2"
                             labeledText: true
+                            onClicked: {
+                                serialManager.sendData("2")
+                                currentAlpha = 1.0/2
+                            }
                         }
                         CustomButton {
                             Layout.fillWidth: true
-                            Layout.preferredWidth: 100
+                            Layout.preferredWidth: 80
                             Layout.fillHeight: true
-                            label: "H2 OFF"
+                            label: "4"
                             labeledText: true
+                            onClicked:  {
+                                serialManager.sendData("4")
+                                currentAlpha = 1.0/4
+                            }
                         }
                         CustomButton {
                             Layout.fillWidth: true
-                            Layout.preferredWidth: 100
+                            Layout.preferredWidth: 80
                             Layout.fillHeight: true
-                            label: "AR ON"
+                            label: "8"
                             labeledText: true
-                        }
-                        CustomButton {
-                            Layout.fillWidth: true
-                            Layout.preferredWidth: 100
-                            Layout.fillHeight: true
-                            label: "AR OFF"
-                            labeledText: true
-                        }
-                        CustomButton {
-                            Layout.fillWidth: true
-                            Layout.preferredWidth: 100
-                            Layout.fillHeight: true
-                            label: "CO2 ON"
-                            labeledText: true
-                        }
-                        CustomButton {
-                            Layout.fillWidth: true
-                            Layout.preferredWidth: 100
-                            Layout.fillHeight: true
-                            label: "CO2 OFF"
-                            labeledText: true
+                            onClicked: {
+                                serialManager.sendData("8")
+                                currentAlpha = 1.0/8
+                            }
                         }
                     }
 
                     Text {
                         text: qsTr("Serial Monitor")
-                        font.pixelSize: 16
-                        color: Local.Colors.text
+                        font.family: "Inter"
+                        font.pixelSize: 13
+                        font.weight: Font.DemiBold
+                        font.capitalization: Font.AllUppercase
+                        font.letterSpacing: 0.8
+                        color: Local.Colors.text_secondary
                         Layout.topMargin: 16
                     }
 
@@ -155,10 +204,38 @@ ApplicationWindow {
                         }
                         ListView {
                             anchors.fill: parent
+                            anchors.margins: 6
+                            clip: true
                             model: serialmonitor
-                            delegate: Text { 
-                                text: stime + " | " + sdata
-                                color: Local.Colors.text
+                            boundsBehavior: Flickable.StopAtBounds
+                            property bool follow: true
+                            ScrollBar.vertical: ScrollBar { }
+                            onContentYChanged: {
+                                if (contentHeight <= height) {
+                                    follow = true
+                                    return
+                                }
+                                follow = contentY >= contentHeight - height - 1
+                            }
+                            onCountChanged: {
+                                if (follow || count === 1) {
+                                    Qt.callLater(positionViewAtEnd)
+                                }
+                            }
+                            delegate: Item {
+                                width: ListView.view.width
+                                height: line.implicitHeight
+                                TextEdit {
+                                    id: line
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    text: stime + " | " + sdata
+                                    color: Local.Colors.text
+                                    readOnly: true
+                                    selectByMouse: true
+                                    wrapMode: TextEdit.WrapAnywhere
+                                    textFormat: TextEdit.PlainText
+                                }
                             }
                         }
                     }
@@ -184,30 +261,37 @@ ApplicationWindow {
                                 placeholderTextColor: Local.Colors.text
                                 color: Local.Colors.text
 
-                                background: Item {}
+                                // background: Item {}
                                 onAccepted: sendCommand()
                             }
                         }
 
-                        Button {
+                        CustomButton {
                             id: serial_send
-                            text: "Send"
-                            flat: true
-
-                            background: Rectangle {
-                                border.color: "white"
-                                // anchors.fill: parent
-                                // radius: 6
-                                color: serial_send.hovered ? Local.Colors.background : "#2c2c2c"
-                            }
-
-                            contentItem: Text {
-                                text: serial_send.text
-                                color: serial_send.hovered ? Local.Colors.iconIndicator : Local.Colors.text
-                            }
-
+                            label: "Send"
+                            radius: 6
                             onClicked: sendCommand()
                         }
+
+                        // Button {
+                        //     id: serial_send
+                        //     text: "Send"
+                        //     flat: true
+
+                        //     background: Rectangle {
+                        //         border.color: "white"
+                        //         // anchors.fill: parent
+                        //         // radius: 6
+                        //         color: serial_send.hovered ? Local.Colors.background : "#2c2c2c"
+                        //     }
+
+                        //     contentItem: Text {
+                        //         text: serial_send.text
+                        //         color: serial_send.hovered ? Local.Colors.iconIndicator : Local.Colors.text
+                        //     }
+
+                        //     onClicked: sendCommand()
+                        // }
                     }
                 }
             }
@@ -218,10 +302,13 @@ ApplicationWindow {
                 Layout.fillHeight: true
                 color: "#1e1e1e"
                 
+                
+
+                // Quick Buttons
                 GridLayout {
                     anchors.fill: parent
                     anchors.margins: 8
-                    columns: 2
+                    columns: 1
                     rows: 2
                     columnSpacing: 8
                     rowSpacing: 8
@@ -231,7 +318,10 @@ ApplicationWindow {
                         id: topleftPanel
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        title: "top left"
+                        title: "ADC Voltage"
+                        yAuto: true
+                        windowSize: 500
+                        label1: "ADC Raw Voltage"
                     }
                     
                     // Top-Right: Power Percent
@@ -239,23 +329,11 @@ ApplicationWindow {
                         id: toprightPanel
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        title: "top right"
-                    }
-                    
-                    // Bottom-Left: Reactor Temperature
-                    GraphPanel {
-                        id: bottomleftPanel
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        title: "bottom left"
-                    }
-                    
-                    // Bottom-Right: Average Temperature
-                    GraphPanel {
-                        id: bottomrightPanel
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        title: "bottom right"
+                        title: "Temperature"
+                        yAuto: true
+                        windowSize: 500
+                        label1: "Temperature (deg C)"
+                        label2: "EMA (alpha=" + root.currentAlpha +")"
                     }
                 }
             }

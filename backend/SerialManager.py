@@ -1,7 +1,8 @@
-from PySide6.QtCore import QObject, Signal, Slot, Property
+from PySide6.QtCore import QObject, Signal, Slot, Property, QIODevice
 from PySide6.QtSerialPort import QSerialPort, QSerialPortInfo
 from datetime import datetime
 from collections import deque
+import time
 import re
 
 class SerialManager(QObject):
@@ -30,17 +31,14 @@ class SerialManager(QObject):
         self.serial.readyRead.connect(self._on_ready_read)
         self.serial.errorOccurred.connect(self._on_error)
 
-        self.ph1 = deque(maxlen=1000)       # pre-heater 1
-        self.ph2 = deque(maxlen=1000)       # pre-heater 2
-        self.rs = deque(maxlen=1000)        # reactor surface
-        self.rg = deque(maxlen=1000)        # reactor gas
-        self.pwr = deque(maxlen=1000)       # power
-        self.avg = deque(maxlen=1000)       # average
-        self.time = deque(maxlen=1000)      # time
-        self.h2_flow = deque(maxlen=1000)   # h2_flow
-        self.co2_flow = deque(maxlen=1000)  # co2_flow
-        self.ar_flow = deque(maxlen=1000)   # ar_flow
+        self.time = deque(maxlen=500)      # time
 
+        self.temp_raw = deque(maxlen=500)
+        self.temp_ema = deque(maxlen=500)
+        self.adc = deque(maxlen=500)
+
+        # Time stuff
+        self._t0 = None
     # -------- QML-visible property --------
     def getIsConnected(self):
         return self._is_connected
@@ -67,7 +65,7 @@ class SerialManager(QObject):
         self.serial.setPortName(port_name)
         self.serial.setBaudRate(baud_rate)
 
-        if not self.serial.open(QSerialPort.ReadWrite):
+        if not self.serial.open(QSerialPort.OpenModeFlag.ReadWrite):
             self.connectionError.emit("Failed to open serial port")
             return False
 
@@ -105,10 +103,7 @@ class SerialManager(QObject):
     def _on_ready_read(self):
         while self.serial.canReadLine():
             line = (
-                self.serial.readLine()
-                .data()
-                .decode("utf-8", errors="ignore")
-                .strip()
+                bytes(self.serial.readLine().data()).decode("utf-8", errors="ignore").strip()
             )
             timestamp = datetime.now().strftime("%H:%M:%S.%f")[:-3]
             
@@ -119,12 +114,13 @@ class SerialManager(QObject):
             # Append to text file
             with open("serial_log.csv", "a", encoding="utf-8") as f:
                 f.write(f"{timestamp},{line}\n")
-
+            
+            
             # Optional: still emit to QML / UI
             self.dataReceived.emit(timestamp, line)
 
     def _on_error(self, error):
-        if error == QSerialPort.NoError:
+        if error == QSerialPort.SerialPortError.NoError:
             return
 
         self.connectionError.emit(self.serial.errorString())
@@ -136,63 +132,76 @@ class SerialManager(QObject):
         H:0.45, CO2:0.20, Ar:1.10
         """
 
-        # Thermocouples
-        tc = re.findall(r"t([6-9]):\s*(-?\d+)", line)  
+        # Readings
+        m = re.search(r"V:(\d+)T:(\d+)E:(\d+)", line)  
             # raw string format:
             #   ()->dynamic parse
             #   \s*->whitespace eg " ", "\t"
             #   -? -> maybe negative
             #   \d+ -> multi digit decimal
-        
-        if tc:  # store data in data list
-            data = {}
-            for idx, val in tc:
-                data[f"t{idx}"] = float(val)
-            return data
+        if m:
+            v_raw = int(m.group(1))
+            t_raw = int(m.group(2))
+            e_raw = int(m.group(3))
+            # scale
+            v = v_raw / 10000.0
+            t = t_raw / 10000.0
+            e = e_raw / 10000.0
+            return {"V": v, "T":t, "E":e}
 
-        # Flow rates
-        flow = re.findall(r"(H|CO2|Ar):([0-9.]+)", line)
-        if flow:
-            return {k: float(v) for k, v in flow}   # list with flow rates
-        
         return None
 
     def _store_parsed_data(self, data: dict, timestamp):
         # TO-DO: append to csv?
-        if "t8" in data:
-            self.ph1.append(data["t8"])
-        if "t9" in data:
-            self.ph2.append(data["t9"])
-        if "t6" in data:
-            self.rs.append(data["t6"])
-        if "t7" in data:
-            self.rg.append(data["t7"])
+        # if "t8" in data:
+        #     self.ph1.append(data["t8"])
+        # if "t9" in data:
+        #     self.ph2.append(data["t9"])
+        # if "t6" in data:
+        #     self.rs.append(data["t6"])
+        # if "t7" in data:
+        #     self.rg.append(data["t7"])
 
-        if "H" in data:
-            self.h2_flow.append(data["H"])
-        if "CO2" in data:
-            self.co2_flow.append(data["CO2"])
-        if "Ar" in data:
-            self.ar_flow.append(data["Ar"])
+        # if "H" in data:
+        #     self.h2_flow.append(data["H"])
+        # if "CO2" in data:
+        #     self.co2_flow.append(data["CO2"])
+        # if "Ar" in data:
+        #     self.ar_flow.append(data["Ar"])
 
-        if "t6" in data and "t7" in data:
-            self.avg.append((data["t6"] + data["t7"]) / 2.0)
-        if "pwr" in data:
-            self.pwr.append(data["pwr"])
+        # if "t6" in data and "t7" in data:
+        #     self.avg.append((data["t6"] + data["t7"]) / 2.0)
+        # if "pwr" in data:
+        #     self.pwr.append(data["pwr"])
 
-        self.time.append(timestamp)
+        if "V" in data:
+            self.adc.append(data["V"])
+        if "T" in data:
+            self.temp_raw.append(data["T"])
+        if "E" in data:
+            self.temp_ema.append(data["E"])
+
+        if self._t0 is None:
+            self._t0 = time.perf_counter()
+        t = time.perf_counter() - self._t0
+        self.time.append(t)
+
+        # self.time.append(timestamp)
         self.telemetryUpdated.emit()
 
     def _build_points(self, series):
-        return [{"x": float(idx), "y": float(val)} for idx, val in enumerate(series)]
+        return [{"x": self.time[idx], "y": float(val)} for idx, val in enumerate(series)]
 
     @Slot(result="QVariantMap")
     def getTelemetrySeries(self):
         return {
-            "ph1": self._build_points(self.ph1),
-            "ph2": self._build_points(self.ph2),
-            "rs": self._build_points(self.rs),
-            "rg": self._build_points(self.rg),
-            "pwr": self._build_points(self.pwr),
-            "avg": self._build_points(self.avg),
+            "adc": self._build_points(self.adc),
+            "temp_raw": self._build_points(self.temp_raw),
+            "temp_ema": self._build_points(self.temp_ema)
+            # "ph1": self._build_points(self.ph1),
+            # "ph2": self._build_points(self.ph2),
+            # "rs": self._build_points(self.rs),
+            # "rg": self._build_points(self.rg),
+            # "pwr": self._build_points(self.pwr),
+            # "avg": self._build_points(self.avg),
         }

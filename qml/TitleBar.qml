@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Layouts
 import QtQuick.Window
 import "." as Local
 
@@ -8,8 +9,10 @@ Item {
     required property ApplicationWindow window
     required property var serialManager
     height: 32
-    anchors.left: parent.left
-    anchors.right: parent.right
+    Layout.fillWidth: true
+    Layout.preferredHeight: 32
+    Layout.alignment: Qt.AlignTop
+
     
     // // TEMPORARY PLEASE REMOVE 
     // Component.onCompleted: {
@@ -28,17 +31,24 @@ Item {
     Row {
         anchors.left: parent.left
         anchors.verticalCenter: parent.verticalCenter
-
-        Text {
-            text: serialManager ? "SM OK" : "SM UNDEFINED"
-        }
+        height: parent.height
+        // anchors.top: parent.top
+        // anchors.bottom: parent.bottom
+        // Text {
+        //     text: serialManager ? "SM OK" : "SM UNDEFINED"
+        // }
 
 
         CustomButton {
             labeledText: true
-            radius: 6
             label: serialManager.isConnected ? "Disconnect" : "Connect"
-
+            height: parent.height
+            outline: false
+            idleColor: Local.Colors.header
+            radius: 2
+            // anchors.left: parent.left
+            // anchors.top: parent.top
+            // anchors.bottom: parent.bottom
             onClicked: {
                 if (serialManager.isConnected) {
                     serialManager.disconnect()
@@ -52,58 +62,61 @@ Item {
     Row {
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
-        
+        height: parent.height
         Button {
             id: minimize
-            width: 24
-            height: 24
+            width:  parent.height
+            height: parent.height
             padding: 0
             flat: true
-
             background: Rectangle {
                 anchors.fill: parent
-                radius: 6
-                color: minimize.hovered ? Local.Colors.background : Local.Colors.surface1
+                color: minimize.hovered ? Local.Colors.background : Local.Colors.header
             }
 
+            icon.width: 14
+            icon.height: 14
             icon.source: "../icons/remove_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg"
-            icon.color: minimize.hovered ? Local.Colors.iconIndicator : Local.Colors.icon
+            icon.color: minimize.hovered ? Local.Colors.text : Local.Colors.text_secondary
 
             onClicked: root.window.showMinimized()
         }
 
         Button {
             id: fullscreen
-            width: 24
-            height: 24
+            width:  parent.height
+            height: parent.height
             flat: true
-
+            padding: 0
             background: Rectangle {
                 anchors.fill: parent
-                radius: 6
-                color: fullscreen.hovered ? Local.Colors.background : Local.Colors.surface1
+                color: fullscreen.hovered ? Local.Colors.background : Local.Colors.header
             }
 
+            icon.width: 14
+            icon.height: 14
             icon.source: "../icons/square_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg"
-            icon.color: fullscreen.hovered ? Local.Colors.iconIndicator : Local.Colors.icon
+            icon.color: fullscreen.hovered ? Local.Colors.text : Local.Colors.text_secondary
 
             onClicked: root.window.showFullScreen()
         }
 
         Button {
             id: close
-            width: 24
-            height: 24
+            width:  parent.height
+            height: parent.height
             flat: true
+            padding: 0
 
             background: Rectangle {
                 anchors.fill: parent
-                radius: 6
-                color: close.hovered ? Local.Colors.background : Local.Colors.surface1
+                color: close.hovered ? Local.Colors.primary : Local.Colors.header
             }
 
+            icon.width: 14
+            icon.height: 14
             icon.source: "../icons/close_24dp_E3E3E3_FILL0_wght400_GRAD0_opsz24.svg"
-            icon.color: close.hovered ? Local.Colors.iconIndicator : Local.Colors.icon
+            icon.color: close.hovered ? Local.Colors.text : Local.Colors.text_secondary 
 
             onClicked: root.window.close()
         }

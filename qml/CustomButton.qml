@@ -11,6 +11,9 @@ Item {
     property bool outline: true
     property int outlineWidth: 1
     property int radius: 0
+    property color idleColor: Local.Colors.panel
+    // Layout.fillWidth: true
+    // Layout.fillHeight: true
 
     signal clicked()
 
@@ -21,7 +24,7 @@ Item {
         anchors.fill: parent
         radius: buttonRoot.radius
 
-        color: mouse.containsMouse ? Local.Colors.background : Local.Colors.panel
+        color: mouse.containsMouse ? Local.Colors.background : idleColor
 
         border.width: outline ? outlineWidth : 0
         border.color: outline ? Local.Colors.text : "transparent"
@@ -29,9 +32,11 @@ Item {
         Text {
             id: textItem
             text: buttonRoot.label
+            font.family: "Inter"
+            font.pixelSize: Math.round(parent.height * 0.42)
             visible: buttonRoot.labeledText
             anchors.centerIn: parent
-            color: mouse.containsMouse ? Local.Colors.iconIndicator : Local.Colors.text
+            color: mouse.containsMouse ? Local.Colors.text_secondary : Local.Colors.text
         }
 
         MouseArea {
