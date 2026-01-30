@@ -4,6 +4,8 @@
 An Educational Project for ELEC 291 at UBC:
 - Real-time logging with sliding strip charts
 - Interface with hardware 12-bit ADC
+- Induce motivation for ELEC 221 - Signals and Systems :), specifically system classification and transforms
+- Assembly architecture, GUI implementation
 
 ## Hardware
 - N76E003 MCU
