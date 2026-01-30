@@ -15,7 +15,7 @@ An Educational Project Started for ELEC 291 at UBC:
 - Logging in Qt, offering faster and smoother updates
 - MCU-side real-time filtering using the EMA algorithm:
 $$
-y_k = \alpha\,x_k + (1 - \alpha)\,y_{k-1}
+y_k = \alpha\,x_k + (1 - \alpha)\ y_{k-1}
 $$
 - choose alpha = 1/n, substitute and manipulate
 $$
