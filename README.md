@@ -1,7 +1,7 @@
 # Telemetry on N76E003 MCU, Real-Time Exponential Moving Average (EMA) Filter, GUI in PySide6 + QML
 
 ## Learning Goals
-An Educational Project Started for ELEC 291 at UBC:
+An Educational Project for ELEC 291 at UBC:
 - Real-time logging with sliding strip charts
 - Interface with hardware 12-bit ADC
 
@@ -14,22 +14,28 @@ An Educational Project Started for ELEC 291 at UBC:
 # Bonus Features
 - Logging in Qt, offering faster and smoother updates
 - MCU-side real-time filtering using the EMA algorithm:
-$
+
+$$
 y_k = \alpha\,x_k + (1 - \alpha)\ y_{k-1}
-  
+$$
+
 - choose alpha = 1/n, substitute and manipulate
-$
-y_k = \frac{1}{n}x_k + \left(1 - \frac{1}{n}\right)y_{k-1}
-$
+
+$$
+y_k = \frac{1}{n}x_k + \left(1 - \frac{1}{n}\right)y_{k-1} = \frac{(x_k + (n-1)*y_{k-1})}{n}
+$$
+
 - This is the form that is seen in asm processing
 - Interrupt-based UART recieve on MCU, allows for dynamic, GUI-controlled choice of n
 - GUI displays all of: raw ADC voltage, raw temperature reading, filtered temperature
 - Overlapped raw and filtered temperature data representation to highlight effects of data processing 
 
 
-# Architecture
+# Architecture/Code
 - 80C51 Assembly for MCU Firmware
 - PySide6 + QML for front end, native Python backend
+- Python built in VSCode
+- Assembly built in CrossIDE
 
 # To use: 
 - Create a virtual environment in Python 3.11 (do NOT use latest version, it might not be supported by current PySide6)
