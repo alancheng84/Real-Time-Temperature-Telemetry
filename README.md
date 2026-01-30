@@ -14,13 +14,13 @@ An Educational Project Started for ELEC 291 at UBC:
 # Bonus Features
 - Logging in Qt, offering faster and smoother updates
 - MCU-side real-time filtering using the EMA algorithm:
-$$
+$
 y_k = \alpha\,x_k + (1 - \alpha)\ y_{k-1}
-$$
+  
 - choose alpha = 1/n, substitute and manipulate
-$$
+$
 y_k = \frac{1}{n}x_k + \left(1 - \frac{1}{n}\right)y_{k-1}
-$$
+$
 - This is the form that is seen in asm processing
 - Interrupt-based UART recieve on MCU, allows for dynamic, GUI-controlled choice of n
 - GUI displays all of: raw ADC voltage, raw temperature reading, filtered temperature
